@@ -1,0 +1,8 @@
+#!/bin/bash 
+#
+# Run small test datasets to validate pipeline function
+#
+
+nextflow run main.nf \
+ -resume \
+ -profile singularity,test 
