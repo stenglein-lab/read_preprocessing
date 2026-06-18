@@ -21,9 +21,8 @@ process BBMAP_BBDUK {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
     def raw      = meta.single_end ? "in=${reads[0]}" : "in1=${reads[0]} in2=${reads[1]}"
-    def trimmed  = meta.single_end ? "out=${prefix}.fastq.gz" : "out1=${prefix}_1.fastq.gz out2=${prefix}_2.fastq.gz"
+    def trimmed  = meta.single_end ? "out=${meta.id}.trim_1.fastq.gz" : "out1=${meta.id}.trim_1.fastq.gz out2=${meta.id}.trim_2.fastq.gz"
     def contaminants_fa = contaminants ? "ref=$contaminants" : ''
     """
     maxmem=\$(echo \"$task.memory\"| sed 's/ GB/g/g')
@@ -34,7 +33,7 @@ process BBMAP_BBDUK {
         threads=$task.cpus \\
         $args \\
         $contaminants_fa \\
-        &> ${prefix}.bbduk.log
+        &> ${meta.id}.bbduk.log
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bbmap: \$(bbversion.sh | grep -v "Duplicate cpuset")

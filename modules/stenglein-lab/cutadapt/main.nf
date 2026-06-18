@@ -61,22 +61,18 @@ process CUTADAPT {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path('*.trim.fastq.gz') , emit: reads
-    // reads_list will always emit a list of trimmed files
-    // even if only one file
-    // tuple val(meta), files('*.trim.fastq.gz'), emit: reads_list 
-    tuple val(meta), path('*.log')           , emit: log
-    path "versions.yml"                      , emit: versions
+    tuple val(meta), path('*.fastq.gz')   , emit: reads
+    tuple val(meta), path('*.log')        , emit: log
+    path "versions.yml"                   , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args             = task.ext.args ?: ''
-    // use arg2 as PE trimming options
+    // use task.ext.arg2 as PE trimming options
     def paired_end_args  = meta.single_end ? '': task.ext.args2 
-    def prefix           = task.ext.prefix ?: "${meta.id}"
-    def trimmed          = meta.single_end ? "-o ${prefix}.trim.fastq.gz" : "-o ${prefix}_1.trim.fastq.gz -p ${prefix}_2.trim.fastq.gz"
+    def trimmed          = meta.single_end ? "-o ${meta.id}.cutadapt.trim_1.fastq.gz" : "-o ${meta.id}.cutadapt.trim_1.fastq.gz -p ${meta.id}.cutadapt.trim_2.fastq.gz"
     """
     cutadapt \\
         --cores $task.cpus \\
@@ -84,7 +80,7 @@ process CUTADAPT {
         $paired_end_args \\
         $trimmed \\
         $reads \\
-        > ${prefix}.cutadapt.log
+        > ${meta.id}.cutadapt.log
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
