@@ -23,7 +23,7 @@ A nextflow workflow / pipeline to perform common NGS read preprocessing.  This c
 - [Dependencies](#Dependencies)
     - [Nextflow](#Nextflow)
     - [Singularity ](#Singularity)
-
+- [Citations](#Citations)
 
 ## Workflow steps
 
