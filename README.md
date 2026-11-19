@@ -108,11 +108,11 @@ Adapter sequences to be trimmed off of the 5′ and 3′ ends of reads by cutada
 
 ### Always trim bases
 
-The pipeline can always trim a certain number of bases off the beginning or ends of reads, controlled by the --always_trim_5p_bases (default: 0) or --always_trim_3p_bases (default 1) parameters.
+The pipeline can always trim a certain number of bases off the beginning or ends of reads, controlled by the `--always_trim_5p_bases` (default: 0) or `--always_trim_3p_bases` (default: 1: always trim the last base of each read) parameters.
 
 ### Post trim minimum length
 
-Following trimming, the pipeline will retain reads that are longer than --post_trim_min_length (default: 30 bases). If you are working with very short reads (e.g. small RNA reads), you may wish to decrease this.
+Following trimming, the pipeline will retain reads that are longer than `--post_trim_min_length` (default: 30). If you are working with very short reads (e.g. small RNA reads), you may wish to decrease this. If that is the case, you should also decrease the `--bbduk-min-length` [parameter](#BBDUK-settings).
 
 ### BBDUK settings
 
@@ -139,7 +139,7 @@ Configurable parameters for deduplication include:
 - `--dedup_mismatches_allowed` default: 2
 - `--params.dedup_percent_id` default: 0.99
 
-Fastq files containing trimmed but not deduplicated reads will be placed in the `trimmed_fastq` [output](#outputs) subdirectory. Trimmed and deduplicated fastq will be placed in a `trimmed_deduplicated_fastq` subdirectory.
+fastq files containing trimmed but not deduplicated reads will be placed in the `trimmed_fastq` [output](#outputs) subdirectory. Trimmed and deduplicated fastq will be placed in a `trimmed_deduplicated_fastq` subdirectory.
 
 ### Optional subsampling
 
