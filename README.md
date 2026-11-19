@@ -128,16 +128,18 @@ The pipeline uses [BBDuk](https://bbmap.org/tools/bbduk) to perform additional t
 Duplicated reads or read pairs, presumably PCR duplicates, can be removed by setting the `--collapse_duplicate_reads` parameter, for instance:
 
 ```
-nextflow run stenglein-lab/read_preprocessing -profile singularity -resume  --fastq_dir /path/to/fastq/directory 
+nextflow run stenglein-lab/read_preprocessing -profile singularity -resume  --fastq_dir /path/to/fastq/directory --collapse_duplicate_reads
 ```
 
-In this case, fastq files containing trimmed but not deduplicated reads will be placed in the `trimmed_fastq` output subdirectory. Trimmed and deduplicated fastq will be placed in a `trimmed_deduplicated_fastq` output subdirectory.
+The workflow uses the [cd-hit-dup](https://github.com/weizhongli/cdhit/wiki/3.-User's-Guide#user-content-cdhitdup) tool to perform deduplication.
 
-Configurable parameters for deduplicaiton include:
+Configurable parameters for deduplication include:
 
 - `--dedup_prefix_length` default: 30
 - `--dedup_mismatches_allowed` default: 2
 - `--params.dedup_percent_id` default: 0.99
+
+Fastq files containing trimmed but not deduplicated reads will be placed in the `trimmed_fastq` [output](#outputs) subdirectory. Trimmed and deduplicated fastq will be placed in a `trimmed_deduplicated_fastq` subdirectory.
 
 ### Optional subsampling
 
@@ -147,11 +149,11 @@ To perform subsampling, specify the `--subsample_size` parameter (null by defaul
 
 ## Outputs
 
-The main outputs of the pipeline are trimmed fastq files, which will be placed in a trimmed_fastq subdirectory of the directory specified by the `--outdir` parameter.  By default, this directory will be `./results/trimmed_fastq`.  
+The main outputs of the pipeline are trimmed fastq files, which will be placed in a `trimmed_fastq` subdirectory of the main output directory, which is specified by the `--outdir` parameter (default: `results`).  
 
-Other outputs go in various subdirectories of the directory specified by `--outdir`.
+Other outputs go in various subdirectories of the main output directory.
 
-Test outputs will be output to `test/results`
+Test outputs will go to `test/results`
 
 ## Dependencies
 
