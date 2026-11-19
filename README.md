@@ -11,11 +11,15 @@ A nextflow workflow / pipeline to perform common NGS read preprocessing.  This c
     - [Running by cloning the pipeline's repository](#Running-by-cloning-the-pipeline-repository)
 - [Inputs](#Inputs)
     - [Input fastq](#Input-fastq)
+- [Options](#Options)
     - [Adapter sequences](#Adapter-sequences)
+    - [Always trim bases](#Always-trim-bases)
+    - [Post trim minimum length](#Post-trim-minimum-length)
+    - [BBDuk settings](#BBDUK-settings)
+    - [Optional deduplication](#Optional-deduplication)
+    - [Optional subsampling](#Optional-subsampling)
 - [Outputs](#Outputs)
     - [Output directory](#Output-directory)
-    - [Output file name prefixes ](#Output-file-name-prefixes)
-    - [Optional deduplication](#Optional-deduplication)
 - [Dependencies](#Dependencies)
     - [Nextflow](#Nextflow)
     - [Singularity ](#Singularity)
@@ -26,9 +30,10 @@ A nextflow workflow / pipeline to perform common NGS read preprocessing.  This c
 [This workflow](https://github.com/stenglein-lab/read_preprocessing/blob/main/subworkflows/stenglein-lab/preprocess_reads.nf) (or [subworkflow](https://www.nextflow.io/docs/latest/workflow.html#subworkflows)) performs common pre-processing steps on raw Illumina data.  The main steps include:
 
 - Quality assessment of input reads with FASTQC.
-- Trimming of adapter and low quality bases with cutadapt. 
-- A second adapter trimming step using bbduk (in case any adapter sequences made it past cutadapt)
+- Trimming of [adapter](#Adapter-sequences) and low quality bases with cutadapt. 
+- A second trimming step using [BBDuk](#BBDUK-settings). 
 - Optional [removal](#Optional-deduplication) of duplicate reads or read pairs.
+- Optional [read subsampling](#Optional-subsampling)
 - Quality assessment of trimmed reads with FASTQC.
 - Counting of reads at each step
 - MultiQC report 
@@ -94,14 +99,29 @@ The expected names of the fastq files are defined by the parameter `fastq_patter
 
 The location of the fastq files is specified by the required `fastq_dir` parameter.  You can specify the location of multiple directories, with directory paths separated by commas (e.g., `--fastq_dir /fastq/dir1,/fastq/dir2`).
 
+
+## Options
+
 ### Adapter sequences
 
-Adapter sequences to be trimmed off of the 5′ and 3′ ends of reads by cutadapt are controlled by the parameters `--adapters_3p` and `--adapters_5p`.  These should be fasta files containing one or more sequences to be trimmed.  These default files are [here](https://github.com/stenglein-lab/read_preprocessing/blob/main/refseq/adapters_3p.fasta) and [here](https://github.com/stenglein-lab/read_preprocessing/blob/main/refseq/adapters_5p.fasta).  Adapter sequences for bbduk are controlled by the `--bbduk_adapters` parameter.  BBDuk default [here](https://github.com/stenglein-lab/read_preprocessing/blob/main/refseq/adapters_for_bbduk.fasta).
+Adapter sequences to be trimmed off of the 5′ and 3′ ends of reads by cutadapt are controlled by the parameters `--adapters_3p` and `--adapters_5p`.  These should be fasta files containing one or more sequences to be trimmed.  These default files are [here](./refseq/adapters_3p.fasta) and [here](./refseq/adapters_5p.fasta).  Adapter sequences for bbduk are controlled by the `--bbduk_adapters` parameter.  The default BBDuk adapter sequences are [here](./refseq/adapters_for_bbduk.fasta).
 
+### Always trim bases
 
-## Outputs
+The pipeline can always trim a certain number of bases off the beginning or ends of reads, controlled by the --always_trim_5p_bases (default: 0) or --always_trim_3p_bases (default 1) parameters.
 
-The main outputs of the pipeline are trimmed fastq files, which will be placed in a directory controlled by the `--fastq_out_dir` parameter.  By default, this directory will be `./results/trimmed_fastq`.  
+### Post trim minimum length
+
+Following trimming, the pipeline will retain reads that are longer than --post_trim_min_length (default: 30 bases). If you are working with very short reads (e.g. small RNA reads), you may wish to decrease this.
+
+### BBDUK settings
+
+The pipeline uses [BBDuk](https://bbmap.org/tools/bbduk) to perform additional trimming. Configurable BBDuk options include:
+
+- `--bbduk_kmer_length` default: 15, used as input to BBDuk k parameter
+- `--bbduk_hdist` default: 1, used as input to BBDuk hdist parameter
+- `--bbduk_polyg_length` default: 8, used as option to BBDuk trimpolygright parameter
+- `--bbduk_min_length` default: 30, used as input to BBDuk minlen parameter
 
 ### Optional deduplication
 
@@ -111,8 +131,27 @@ Duplicated reads or read pairs, presumably PCR duplicates, can be removed by set
 nextflow run stenglein-lab/read_preprocessing -profile singularity -resume  --fastq_dir /path/to/fastq/directory 
 ```
 
-In this case, fastq files containing trimmed but not deduplicated reads will be placed in the directory specified by `--fastq_out_dir`.  Trimmed and deduplicated fastq will be placed in a directory specified by `--fastq_out_dedup_dir`.
+In this case, fastq files containing trimmed but not deduplicated reads will be placed in the `trimmed_fastq` output subdirectory. Trimmed and deduplicated fastq will be placed in a `trimmed_deduplicated_fastq` output subdirectory.
 
+Configurable parameters for deduplicaiton include:
+
+- `--dedup_prefix_length` default: 30
+- `--dedup_mismatches_allowed` default: 2
+- `--params.dedup_percent_id` default: 0.99
+
+### Optional subsampling
+
+The pipeline can optionally output a random subset of reads using [seqtk sample](https://github.com/lh3/seqtk)
+
+To perform subsampling, specify the `--subsample_size` parameter (null by default).  Set this parameter to a fraction [0-1] to output a fraction of reads (e.g. 0.1: output 10% of reads) or to an integer >1 (e.g. 10000: output 10000 reads).
+
+## Outputs
+
+The main outputs of the pipeline are trimmed fastq files, which will be placed in a trimmed_fastq subdirectory of the directory specified by the `--outdir` parameter.  By default, this directory will be `./results/trimmed_fastq`.  
+
+Other outputs go in various subdirectories of the directory specified by `--outdir`.
+
+Test outputs will be output to `test/results`
 
 ## Dependencies
 
@@ -139,3 +178,17 @@ singularity --version
 There is no specified minimum version of singularity, but older versions of singularity (<~3.9) may not work.  the pipeline has been tested with singularity v3.9.5.
 
 Singularity containers will be automatically downloaded and stored in a directory named `singularity_cacheDir` in your home directory.  They will only be downloaded once.
+
+
+### Citations
+
+If you use this tool you should cite the tools it uses, including:
+
+- [Nextflow](https://pubmed.ncbi.nlm.nih.gov/28398311/)
+- [Singularity](https://doi.org/10.1371/journal.pone.0177459)
+- [fastqc](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+- [multiqc](https://doi.org/10.1093/bioinformatics/btw354)
+- [cd-hit](https://pubmed.ncbi.nlm.nih.gov/23060610/)
+- [cutadapt](https://doi.org/10.14806/ej.17.1.200)
+- [BBDuk](https://bbmap.org/)
+- [seqtk](https://github.com/lh3/seqtk)
