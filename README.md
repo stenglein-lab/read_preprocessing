@@ -49,6 +49,16 @@ nextflow run stenglein-lab/read_preprocessing -profile singularity -resume  --fa
 
 You must specify the path to a directory containing input fastq (--fastq_dir).  See [this section](#inputs) for more information on required inputs.
 
+### Running test datasets 
+
+This repository includes several small [test datasets](./test/fastq) (fastq files) that can be used to validate pipeline function and to ensure that [dependencies](#dependencies) are satisfied.  To run these test datasets, run:
+
+```
+nextflow run stenglein-lab/read_preprocessing -profile test,singularity -resume 
+```
+
+Test output is placed in a `test/results` directory.
+
 ### Making sure that you are running the latest version
 
 Nextflow will cache the pipeline in `$HOME/.nextflow/assets/` and continue to use the cached version, even if the pipeline has newer versions on github.  To remove the locally cached version, which will force nextflow to download and cache the latest version, run:
